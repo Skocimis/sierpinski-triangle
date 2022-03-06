@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        canvas {
+            padding-left: 0;
+            padding-right: 0;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+    </style>
+</head>
+
+<body style="background-color: azure;">
+    <div>
+        <p>Odaberite broj iteracija. Kliknite i držite miš da biste pomerali kameru. Skrolujte da biste uvećali. Beskonačnost fraktala je ograničena mogućnostima programskog jezika. </p>
+        iteracije: <select id="select"></select>
+        <canvas id="canvas">
+
+        </canvas>
+    </div>
+    <script src="./worker.js"> </script>
+    <script>
+        let w;
+        document.getElementById("select").appendChild(Object.assign(document.createElement("option"), { innerHTML: "Beskonacno", value: -1 }));
+        Array.from(Array(20).keys()).map(e => Object.assign(document.createElement("option"), { innerHTML: e + 1, value: e + 1 })).map(e => document.getElementById("select").appendChild(e));
+        const canvas = document.getElementById('canvas');
+        canvas.width = 0.8 * Math.min(window.innerWidth, window.innerHeight);
+        canvas.height = 0.8 * Math.min(window.innerWidth, window.innerHeight);
+        const context = canvas.getContext("2d");
+        let select = document.getElementById("select");
+        let slika = new Image(500, 500);
+        function resizeCanvas() {
+            canvas.width = 0.8 * Math.min(window.innerWidth, window.innerHeight);
+            canvas.height = 0.8 * Math.min(window.innerWidth, window.innerHeight);
+        }
+        window.onresize = () => {
+            resizeCanvas();
+            render();
+        };
+        let xcentra = canvas.width / 2, ycentra = canvas.height / 2, brojIteracija = -1, poluprecnik = canvas.height / 3;
+        select.onchange = function (e) {
+            brojIteracija = e.target.value;
+            render()
+        }
+        canvas.addEventListener('wheel', e => {
+            if (e.deltaY > 0) {
+                poluprecnik *= 0.8;
+                xcentra = e.offsetX - (e.offsetX - xcentra) * 0.8
+                ycentra = e.offsetY - (e.offsetY - ycentra) * 0.8
+            }
+            else {
+                poluprecnik *= 1.25;
+                console.log(poluprecnik);
+                xcentra = e.offsetX - (e.offsetX - xcentra) * 1.25
+                ycentra = e.offsetY - (e.offsetY - ycentra) * 1.25
+            }
+            render();
+        });
+        
+        let starox = 0, staroy = 0;
+        let movelistener = e => {
+            xcentra += (e.offsetX - starox);
+            ycentra += (e.offsetY - staroy);
+            starox = e.offsetX;
+            staroy = e.offsetY;
+            render();
+        }
+        canvas.addEventListener('mousedown', e => {
+            starox = e.offsetX;
+            staroy = e.offsetY;
+            canvas.addEventListener("mousemove", movelistener);
+            render();
+        });
+        canvas.addEventListener('mouseup', e => {
+            canvas.removeEventListener("mousemove", movelistener);
+            render();
+        });
+
+        function render() {
+            skripta.pokreni({
+                xcentra: xcentra,
+                ycentra: ycentra,
+                brojIteracija: brojIteracija,
+                poluprecnik: poluprecnik,
+                context: context,
+                canvas: canvas
+            })
+        }
+        render();
+
+    </script>
+</body>
+
+</html>
